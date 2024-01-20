@@ -16,8 +16,9 @@ public class MainPage {
     private final SelenideElement
             header = $("h1[class=header__title]"),
             table = $(".spendings-table"),
-            deleteSelectedButton = $(byText("Delete selected"));
-
+            deleteSelectedButton = $(byText("Delete selected")),
+            friendsButton = $("a[href='/friends']"),
+            allPeopleButton = $("a[href='/people']");
     private final ElementsCollection
             spendRows = table.$$("tbody tr");
 
@@ -46,5 +47,17 @@ public class MainPage {
     public MainPage clickDeleteSelected() {
         deleteSelectedButton.click();
         return this;
+    }
+
+    @Step("Нажать на кнопку Friends")
+    public FriendsPage clickFriends() {
+        friendsButton.click();
+        return new FriendsPage();
+    }
+
+    @Step("Нажать на кнопку All people")
+    public PeoplePage clickAllPeople() {
+        allPeopleButton.click();
+        return new PeoplePage();
     }
 }
