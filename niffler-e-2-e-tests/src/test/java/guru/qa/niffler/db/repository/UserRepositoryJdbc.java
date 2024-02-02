@@ -2,9 +2,7 @@ package guru.qa.niffler.db.repository;
 
 import guru.qa.niffler.db.DataSourceProvider;
 import guru.qa.niffler.db.JdbcUrl;
-import guru.qa.niffler.db.model.Authority;
-import guru.qa.niffler.db.model.UserAuthEntity;
-import guru.qa.niffler.db.model.UserEntity;
+import guru.qa.niffler.db.model.*;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
@@ -13,6 +11,9 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 public class UserRepositoryJdbc implements UserRepository {
@@ -107,11 +108,158 @@ public class UserRepositoryJdbc implements UserRepository {
 
   @Override
   public void deleteInAuthById(UUID id) {
-
+    try (Connection connection = authDs.getConnection()) {
+      connection.setAutoCommit(false);
+      try(PreparedStatement psAuthority = connection.prepareStatement(
+              "DELETE FROM \"authority\" WHERE user_id = ?");
+          PreparedStatement psUser = connection.prepareStatement(
+                  "DELETE FROM \"user\" WHERE id = ?")) {
+        psAuthority.setObject(1, id);
+        psAuthority.executeUpdate();
+        psUser.setObject(1, id);
+        psUser.executeUpdate();
+        connection.commit();
+      } catch (SQLException e) {
+        connection.rollback();
+        throw e;
+      } finally {
+        connection.setAutoCommit(true);
+      }
+    } catch (SQLException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   @Override
   public void deleteInUserdataById(UUID id) {
+    try (Connection connection = udDs.getConnection()) {
+      try(PreparedStatement psUser = connection.prepareStatement(
+              "DELETE FROM \"user\" WHERE id = ?")) {
+        psUser.setObject(1, id);
+        psUser.executeUpdate();
+      }
+    } catch (SQLException e) {
+      throw new RuntimeException(e);
+    }
+  }
 
+  @Override
+  public void editInAuth(UserAuthEntity user) {
+    try (Connection connection = authDs.getConnection()) {
+      try(PreparedStatement psUser = connection.prepareStatement(
+              "UPDATE \"user\" SET " +
+              "username = ?, " +
+              "password = ?, " +
+              "enabled = ?, " +
+              "account_non_expired = ?, " +
+              "account_non_locked = ?, " +
+              "credentials_non_expired = ? " +
+              "WHERE id = ?")) {
+        psUser.setString(1, user.getUsername() != null ? user.getUsername() : "");
+        psUser.setString(2, user.getPassword() != null ? user.getPassword() : "");
+        psUser.setBoolean(3, user.getEnabled() != null ? user.getEnabled() : true);
+        psUser.setBoolean(4, user.getAccountNonExpired() != null ? user.getAccountNonExpired() : true);
+        psUser.setBoolean(5, user.getAccountNonLocked() != null ? user.getAccountNonLocked() : true);
+        psUser.setBoolean(6, user.getCredentialsNonExpired() != null ? user.getCredentialsNonExpired() : true);
+        psUser.setObject(7, user.getId());
+
+        psUser.executeUpdate();
+      }
+    } catch (SQLException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  @Override
+  public void editInUserData(UserEntity user) {
+    try (Connection connection = udDs.getConnection()) {
+      try(PreparedStatement psUser = connection.prepareStatement(
+              "UPDATE \"user\" SET " +
+              "username = ? ," +
+              "currency = ? ," +
+              "firstname = ? ," +
+              "surname = ? ," +
+              "photo = ? " +
+              "WHERE id = ?")) {
+        psUser.setString(1, user.getUsername() != null ? user.getUsername() : "");
+        psUser.setString(2, user.getCurrency() != null ? user.getCurrency().name() : CurrencyValues.RUB.name());
+        psUser.setString(3, user.getFirstname());
+        psUser.setString(4, user.getSurname());
+        psUser.setBytes(5, user.getPhoto());
+        psUser.setObject(6, user.getId());
+
+        psUser.executeUpdate();
+      }
+    } catch (SQLException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  @Override
+  public Optional<UserAuthEntity> findByIdInAuth(UUID id) {
+    try (Connection connection = authDs.getConnection()) {
+      try(PreparedStatement psUser = connection.prepareStatement(
+              "SELECT * FROM \"user\" WHERE id = ?");
+      PreparedStatement authUser = connection.prepareStatement(
+              "SELECT * FROM authority WHERE user_id = ?"
+      )) {
+        psUser.setObject(1, id);
+        ResultSet rs = psUser.executeQuery();
+        UserAuthEntity userAuthEntity = null;
+        if (rs.next()) {
+          userAuthEntity = new UserAuthEntity();
+          userAuthEntity.setId(rs.getObject("id", UUID.class));
+          userAuthEntity.setUsername(rs.getString("username"));
+          userAuthEntity.setPassword(rs.getString("password"));
+          userAuthEntity.setEnabled(rs.getBoolean("enabled"));
+          userAuthEntity.setAccountNonExpired(rs.getBoolean("account_non_expired"));
+          userAuthEntity.setAccountNonLocked(rs.getBoolean("account_non_locked"));
+          userAuthEntity.setCredentialsNonExpired(rs.getBoolean("credentials_non_expired"));
+        }
+
+        authUser.setObject(1, id);
+        ResultSet authRs = authUser.executeQuery();
+        List<AuthorityEntity> authorityEntities = new ArrayList<>();
+        while (authRs.next()) {
+          AuthorityEntity authority = new AuthorityEntity();
+          authority.setId(UUID.fromString(authRs.getString("id")));
+          authority.setAuthority(Authority.valueOf(authRs.getString("authority")));
+          authorityEntities.add(authority);
+        }
+
+        if (userAuthEntity != null) {
+          userAuthEntity.setAuthorities(authorityEntities);
+        }
+
+        return Optional.ofNullable(userAuthEntity);
+      }
+    } catch (SQLException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  @Override
+  public Optional<UserEntity> findByIdInUserData(UUID id) {
+    try (Connection connection = udDs.getConnection()) {
+      try(PreparedStatement psUser = connection.prepareStatement(
+              "SELECT * FROM \"user\" WHERE id = ?")) {
+        psUser.setObject(1, id);
+        ResultSet rs = psUser.executeQuery();
+
+        UserEntity userFind = null;
+        if (rs.next()) {
+          userFind = new UserEntity();
+          userFind.setId(rs.getObject("id", UUID.class));
+          userFind.setUsername(rs.getString("username"));
+          userFind.setCurrency(CurrencyValues.valueOf(rs.getString("currency")));
+          userFind.setFirstname(rs.getString("firstname"));
+          userFind.setSurname(rs.getString("surname"));
+          userFind.setPhoto(rs.getBytes("photo"));
+        }
+        return Optional.ofNullable(userFind);
+      }
+    } catch (SQLException e) {
+      throw new RuntimeException(e);
+    }
   }
 }
