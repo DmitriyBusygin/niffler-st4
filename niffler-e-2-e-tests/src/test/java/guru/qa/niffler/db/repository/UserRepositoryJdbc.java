@@ -1,6 +1,8 @@
 package guru.qa.niffler.db.repository;
 
 import guru.qa.niffler.db.DataSourceProvider;
+import guru.qa.niffler.db.JdbcUrl;
+import guru.qa.niffler.db.model.*;
 import guru.qa.niffler.db.Database;
 import guru.qa.niffler.db.model.Authority;
 import guru.qa.niffler.db.model.AuthorityEntity;
@@ -15,6 +17,9 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Optional;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -220,4 +225,56 @@ public class UserRepositoryJdbc implements UserRepository {
       throw new RuntimeException(e);
     }
   }
+
+    @Override
+    public void editInUserData(UserEntity user) {
+        try (Connection connection = udDs.getConnection()) {
+            try(PreparedStatement psUser = connection.prepareStatement(
+                    "UPDATE \"user\" SET " +
+                    "username = ? ," +
+                    "currency = ? ," +
+                    "firstname = ? ," +
+                    "surname = ? ," +
+                    "photo = ? " +
+                    "WHERE id = ?")) {
+                psUser.setString(1, user.getUsername() != null ? user.getUsername() : "");
+                psUser.setString(2, user.getCurrency() != null ? user.getCurrency().name() : CurrencyValues.RUB.name());
+                psUser.setString(3, user.getFirstname());
+                psUser.setString(4, user.getSurname());
+                psUser.setBytes(5, user.getPhoto());
+                psUser.setObject(6, user.getId());
+
+                psUser.executeUpdate();
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public void editInAuth(UserAuthEntity user) {
+        try (Connection connection = authDs.getConnection()) {
+            try(PreparedStatement psUser = connection.prepareStatement(
+                    "UPDATE \"user\" SET " +
+                    "username = ?, " +
+                    "password = ?, " +
+                    "enabled = ?, " +
+                    "account_non_expired = ?, " +
+                    "account_non_locked = ?, " +
+                    "credentials_non_expired = ? " +
+                    "WHERE id = ?")) {
+                psUser.setString(1, user.getUsername() != null ? user.getUsername() : "");
+                psUser.setString(2, user.getPassword() != null ? user.getPassword() : "");
+                psUser.setBoolean(3, user.getEnabled() != null ? user.getEnabled() : true);
+                psUser.setBoolean(4, user.getAccountNonExpired() != null ? user.getAccountNonExpired() : true);
+                psUser.setBoolean(5, user.getAccountNonLocked() != null ? user.getAccountNonLocked() : true);
+                psUser.setBoolean(6, user.getCredentialsNonExpired() != null ? user.getCredentialsNonExpired() : true);
+                psUser.setObject(7, user.getId());
+
+                psUser.executeUpdate();
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
 }
