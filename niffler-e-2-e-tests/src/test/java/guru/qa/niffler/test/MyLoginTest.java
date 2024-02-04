@@ -1,7 +1,7 @@
 package guru.qa.niffler.test;
 
 import guru.qa.niffler.db.model.*;
-import guru.qa.niffler.jupiter.DbUser;
+import guru.qa.niffler.jupiter.annotation.DbUser;
 import guru.qa.niffler.page.LoginPage;
 import guru.qa.niffler.page.MainPage;
 import guru.qa.niffler.page.WelcomePage;
@@ -13,7 +13,7 @@ public class MyLoginTest extends BaseWebTest {
     private final LoginPage loginPage = new LoginPage();
     private final MainPage mainPage = new MainPage();
 
-    @DbUser(userName = "lala", password = "12345")
+    @DbUser(username = "lala", password = "12345")
     @Test
     void statisticShouldBeVisibleAfterLogin(UserAuthEntity userAuth) {
         welcomePage.openPage()

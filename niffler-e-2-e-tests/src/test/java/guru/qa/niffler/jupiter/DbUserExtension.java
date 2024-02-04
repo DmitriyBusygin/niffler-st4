@@ -4,6 +4,7 @@ import com.github.javafaker.Faker;
 import guru.qa.niffler.db.model.*;
 import guru.qa.niffler.db.repository.UserRepository;
 import guru.qa.niffler.db.repository.UserRepositoryJdbc;
+import guru.qa.niffler.jupiter.annotation.DbUser;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.*;
 
@@ -38,7 +39,7 @@ public class DbUserExtension implements BeforeEachCallback, AfterTestExecutionCa
         // логика создания пользователя
         Map<String, Object> createdUsers = new HashMap<>();
 
-        String userName = userFromAnnotation.userName().isEmpty() ? faker.name().firstName() : userFromAnnotation.userName();
+        String userName = userFromAnnotation.username().isEmpty() ? faker.name().firstName() : userFromAnnotation.username();
         String userPassword = userFromAnnotation.password().isEmpty() ? faker.internet().password() : userFromAnnotation.password();
 
         UserAuthEntity userAuthEntity = new UserAuthEntity();
