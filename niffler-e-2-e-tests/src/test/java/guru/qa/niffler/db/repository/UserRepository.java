@@ -8,15 +8,19 @@ import java.util.UUID;
 
 public interface UserRepository {
 
-  UserAuthEntity createInAuth(UserAuthEntity user);
+    UserAuthEntity createInAuth(UserAuthEntity user);
 
-  Optional<UserAuthEntity> findByIdInAuth(UUID id);
+    UserEntity createInUserdata(UserEntity user);
 
-  UserEntity createInUserdata(UserEntity user);
+    UserAuthEntity updateUserInAuth(UserAuthEntity user);
 
-  Optional<UserEntity> findByIdInUserdata(UUID id);
+    UserEntity updateUserInUserdata(UserEntity user);
 
-  void deleteInAuthById(UUID id);
+    Optional<UserAuthEntity> findByIdInAuth(UUID id);
 
-  void deleteInUserdataById(UUID id);
+    Optional<UserEntity> findByIdInUserData(UUID id);
+
+    void deleteInAuthById(UUID id);
+
+    void deleteInUserdataById(UUID id);
 }

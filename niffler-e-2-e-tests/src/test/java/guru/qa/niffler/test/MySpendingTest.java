@@ -1,8 +1,8 @@
 package guru.qa.niffler.test;
 
 import com.codeborne.selenide.Configuration;
-import guru.qa.niffler.jupiter.GenerateCategory;
-import guru.qa.niffler.jupiter.GenerateSpend;
+import guru.qa.niffler.jupiter.annotation.GenerateCategory;
+import guru.qa.niffler.jupiter.annotation.GenerateSpend;
 import guru.qa.niffler.model.CurrencyValues;
 import guru.qa.niffler.model.SpendJson;
 import guru.qa.niffler.page.LoginPage;
