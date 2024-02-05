@@ -2,6 +2,8 @@ package guru.qa.niffler.db.repository;
 
 import guru.qa.niffler.db.DataSourceProvider;
 import guru.qa.niffler.db.Database;
+import guru.qa.niffler.db.model.Authority;
+import guru.qa.niffler.db.model.CurrencyValues;
 import guru.qa.niffler.db.model.UserAuthEntity;
 import guru.qa.niffler.db.model.UserEntity;
 import guru.qa.niffler.db.sjdbc.UserAuthEntityResultSetExtractor;
@@ -122,12 +124,70 @@ public class UserRepositorySJdbc implements UserRepository {
 
     @Override
     public UserAuthEntity updateUserInAuth(UserAuthEntity user) {
-        return null;
+        return authTxt.execute(action -> {
+            authTemplate.update(con -> {
+                PreparedStatement psUser = con.prepareStatement(
+                        """
+                                                            
+                                    UPDATE "user" SET
+                                username = ?,
+                                password = ?,
+                                enabled = ?,
+                                account_non_expired = ?,
+                                account_non_locked = ?,
+                                credentials_non_expired = ?
+                                WHERE id = ?""");
+                psUser.setString(1, user.getUsername() != null ? user.getUsername() : "");
+                psUser.setString(2, user.getPassword() != null ? user.getPassword() : "");
+                psUser.setBoolean(3, user.getEnabled() != null ? user.getEnabled() : true);
+                psUser.setBoolean(4, user.getAccountNonExpired() != null ? user.getAccountNonExpired() : true);
+                psUser.setBoolean(5, user.getAccountNonLocked() != null ? user.getAccountNonLocked() : true);
+                psUser.setBoolean(6, user.getCredentialsNonExpired() != null ? user.getCredentialsNonExpired() : true);
+                psUser.setObject(7, user.getId());
+                return psUser;
+            });
+
+            authTemplate.update("DELETE FROM \"authority\" WHERE user_id = ?", user.getId());
+
+            authTemplate.batchUpdate("INSERT INTO \"authority\" (user_id, authority) VALUES (?, ?)",
+                    new BatchPreparedStatementSetter() {
+                        @Override
+                        public void setValues(PreparedStatement ps, int i) throws SQLException {
+                            ps.setObject(1, user.getId());
+                            ps.setString(2, String.valueOf(Authority.values()[i]));
+                        }
+
+                        @Override
+                        public int getBatchSize() {
+                            return Authority.values().length;
+                        }
+                    }
+            );
+            return user;
+        });
     }
 
     @Override
     public UserEntity updateUserInUserdata(UserEntity user) {
-        return null;
+        udTemplate.update(con -> {
+            PreparedStatement psUser = con.prepareStatement(
+                    """
+                            UPDATE "user" SET
+                            username = ?,
+                            currency = ?,
+                            firstname = ?,
+                            surname = ?,
+                            photo = ?
+                            WHERE id = ?""");
+            psUser.setString(1, user.getUsername() != null ? user.getUsername() : "");
+            psUser.setString(2, user.getCurrency() != null ? user.getCurrency().name() : CurrencyValues.RUB.name());
+            psUser.setString(3, user.getFirstname());
+            psUser.setString(4, user.getSurname());
+            psUser.setBytes(5, user.getPhoto());
+            psUser.setObject(6, user.getId());
+            return psUser;
+        });
+        return user;
     }
 
     @Override
