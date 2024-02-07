@@ -225,15 +225,20 @@ public class UserRepositoryJdbc implements UserRepository {
     @Override
     public UserAuthEntity updateUserInAuth(UserAuthEntity user) {
         try (Connection connection = authDs.getConnection()) {
+            connection.setAutoCommit(false);
             try (PreparedStatement psUser = connection.prepareStatement(
-                    "UPDATE \"user\" SET " +
-                    "username = ?, " +
-                    "password = ?, " +
-                    "enabled = ?, " +
-                    "account_non_expired = ?, " +
-                    "account_non_locked = ?, " +
-                    "credentials_non_expired = ? " +
-                    "WHERE id = ?")) {
+                    """
+                            UPDATE "user" SET
+                            username = ?,
+                            password = ?,
+                            enabled = ?,
+                            account_non_expired = ?,
+                            account_non_locked = ?,
+                            credentials_non_expired = ?
+                            WHERE id = ?""");
+                 PreparedStatement deleteAuthorityPs = connection.prepareStatement("DELETE FROM \"authority\" WHERE user_id = ?");
+                 PreparedStatement insertAuthorityPs = connection.prepareStatement("INSERT INTO \"authority\" (user_id, authority) VALUES (?, ?)")) {
+
                 psUser.setString(1, user.getUsername() != null ? user.getUsername() : "");
                 psUser.setString(2, user.getPassword() != null ? user.getPassword() : "");
                 psUser.setBoolean(3, user.getEnabled() != null ? user.getEnabled() : true);
@@ -241,26 +246,44 @@ public class UserRepositoryJdbc implements UserRepository {
                 psUser.setBoolean(5, user.getAccountNonLocked() != null ? user.getAccountNonLocked() : true);
                 psUser.setBoolean(6, user.getCredentialsNonExpired() != null ? user.getCredentialsNonExpired() : true);
                 psUser.setObject(7, user.getId());
-
                 psUser.executeUpdate();
+
+                deleteAuthorityPs.setObject(1, user.getId());
+                deleteAuthorityPs.executeUpdate();
+
+                for (Authority authority : Authority.values()) {
+                    insertAuthorityPs.setObject(1, user.getId());
+                    insertAuthorityPs.setString(2, authority.name());
+                    insertAuthorityPs.addBatch();
+                    insertAuthorityPs.clearParameters();
+                }
+                insertAuthorityPs.executeBatch();
+
+                connection.commit();
+                return user;
+            } catch (SQLException e) {
+                connection.rollback();
+                throw e;
+            } finally {
+                connection.setAutoCommit(false);
             }
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
-        return null;
     }
 
     @Override
     public UserEntity updateUserInUserdata(UserEntity user) {
         try (Connection connection = udDs.getConnection()) {
             try (PreparedStatement psUser = connection.prepareStatement(
-                    "UPDATE \"user\" SET " +
-                    "username = ? ," +
-                    "currency = ? ," +
-                    "firstname = ? ," +
-                    "surname = ? ," +
-                    "photo = ? " +
-                    "WHERE id = ?")) {
+                    """
+                            UPDATE "user" SET
+                            username = ?,
+                            currency = ?,
+                            firstname = ?,
+                            surname = ?,
+                            photo = ?
+                            WHERE id = ?""")) {
                 psUser.setString(1, user.getUsername() != null ? user.getUsername() : "");
                 psUser.setString(2, user.getCurrency() != null ? user.getCurrency().name() : CurrencyValues.RUB.name());
                 psUser.setString(3, user.getFirstname());
@@ -269,10 +292,10 @@ public class UserRepositoryJdbc implements UserRepository {
                 psUser.setObject(6, user.getId());
 
                 psUser.executeUpdate();
+                return user;
             }
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
-        return null;
     }
 }
