@@ -1,54 +1,55 @@
 package guru.qa.niffler.jupiter;
 
-import guru.qa.niffler.api.SpendApi;
 import guru.qa.niffler.jupiter.annotation.GenerateSpend;
 import guru.qa.niffler.model.SpendJson;
-import okhttp3.OkHttpClient;
-import org.junit.jupiter.api.extension.BeforeEachCallback;
-import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.jupiter.api.extension.*;
 import org.junit.platform.commons.support.AnnotationSupport;
-import retrofit2.Retrofit;
-import retrofit2.converter.jackson.JacksonConverterFactory;
 
+import java.io.IOException;
 import java.util.Date;
 import java.util.Optional;
 
-public class SpendExtension implements BeforeEachCallback {
+public abstract class SpendExtension implements BeforeEachCallback, ParameterResolver {
 
-  public static final ExtensionContext.Namespace NAMESPACE
-      = ExtensionContext.Namespace.create(SpendExtension.class);
+    public static final ExtensionContext.Namespace NAMESPACE = ExtensionContext.Namespace.create(SpendExtension.class);
 
-  private static final OkHttpClient HTTP_CLIENT = new OkHttpClient.Builder().build();
-  private static final Retrofit RETROFIT = new Retrofit.Builder()
-      .client(HTTP_CLIENT)
-      .baseUrl("http://127.0.0.1:8093")
-      .addConverterFactory(JacksonConverterFactory.create())
-      .build();
+    public abstract SpendJson create(SpendJson spend) throws IOException;
 
-  private final SpendApi spendApi = RETROFIT.create(SpendApi.class);
+    @Override
+    public void beforeEach(ExtensionContext context) throws Exception {
+        Optional<GenerateSpend> spend = AnnotationSupport.findAnnotation(
+                context.getRequiredTestMethod(),
+                GenerateSpend.class
+        );
 
-  @Override
-  public void beforeEach(ExtensionContext extensionContext) throws Exception {
-    Optional<GenerateSpend> spend = AnnotationSupport.findAnnotation(
-        extensionContext.getRequiredTestMethod(),
-        GenerateSpend.class
-    );
+        if (spend.isPresent()) {
+            GenerateSpend spendData = spend.get();
+            SpendJson spendJson = new SpendJson(
+                    null,
+                    spendData.username(),
+                    new Date(),
+                    spendData.currency(),
+                    spendData.amount(),
+                    spendData.description(),
+                    spendData.category()
+            );
 
-    if (spend.isPresent()) {
-      GenerateSpend spendData = spend.get();
-      SpendJson spendJson = new SpendJson(
-          null,
-          new Date(),
-          spendData.category(),
-          spendData.currency(),
-          spendData.amount(),
-          spendData.description(),
-          spendData.username()
-      );
+            SpendJson createdSpend = create(spendJson);
 
-      SpendJson created = spendApi.addSpend(spendJson).execute().body();
-      extensionContext.getStore(NAMESPACE)
-          .put("spend", created);
+            context.getStore(NAMESPACE).put(context.getUniqueId(), createdSpend);
+        }
     }
-  }
+
+    @Override
+    public boolean supportsParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
+        return parameterContext.getParameter()
+                .getType()
+                .isAssignableFrom(SpendJson.class);
+    }
+
+    @Override
+    public SpendJson resolveParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
+        return extensionContext.getStore(SpendExtension.NAMESPACE)
+                .get(extensionContext.getUniqueId(), SpendJson.class);
+    }
 }

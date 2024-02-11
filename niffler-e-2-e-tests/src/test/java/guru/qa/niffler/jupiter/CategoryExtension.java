@@ -46,7 +46,7 @@ public class CategoryExtension implements BeforeEachCallback, ParameterResolver 
             if (existingCategoriesInDB != null) {
                 isNotExistCategoryInDB = existingCategoriesInDB.stream().noneMatch(category -> category.category().equals(categoryJson.category()));
                 context.getStore(NAMESPACE)
-                        .put("category", existingCategoriesInDB.stream()
+                        .put(context.getUniqueId(), existingCategoriesInDB.stream()
                                 .filter(c -> c.category().equals(categoryJson.category()))
                                 .findAny());
             }
@@ -54,7 +54,7 @@ public class CategoryExtension implements BeforeEachCallback, ParameterResolver 
             if (isNotExistCategoryInDB) {
                 CategoryJson createdCategory = categoryApi.addCategory(categoryJson).execute().body();
                 context.getStore(NAMESPACE)
-                        .put("category", createdCategory);
+                        .put(context.getUniqueId(), createdCategory);
             }
         }
     }
@@ -71,6 +71,6 @@ public class CategoryExtension implements BeforeEachCallback, ParameterResolver 
     public CategoryJson resolveParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
         return extensionContext
                 .getStore(CategoryExtension.NAMESPACE)
-                .get("category", CategoryJson.class);
+                .get(extensionContext.getUniqueId(), CategoryJson.class);
     }
 }
