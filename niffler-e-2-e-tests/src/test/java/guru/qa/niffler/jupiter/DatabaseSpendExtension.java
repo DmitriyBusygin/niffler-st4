@@ -8,10 +8,10 @@ import guru.qa.niffler.model.SpendJson;
 
 public class DatabaseSpendExtension extends SpendExtension {
 
-    private static final SpendRepository spendRepository = new SpendRepositoryHibernate();
-
     @Override
     public SpendJson create(SpendJson spend) {
+        final SpendRepository spendRepository = new SpendRepositoryHibernate();
+
         return spendRepository
                 .createSpend(spend.toEntity())
                 .toJson();
