@@ -1,7 +1,7 @@
 package guru.qa.niffler.test;
 
 import guru.qa.niffler.jupiter.annotation.User;
-import guru.qa.niffler.jupiter.UsersQueueExtension;
+import guru.qa.niffler.jupiter.extension.UsersQueueExtension;
 import guru.qa.niffler.model.UserJson;
 import guru.qa.niffler.page.FriendsPage;
 import guru.qa.niffler.page.LoginPage;

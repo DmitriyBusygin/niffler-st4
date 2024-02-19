@@ -70,12 +70,12 @@ public class LoginTest extends BaseWebTest {
     $("a[href*='redirect']").click();
 
     new LoginPage()
-        .setLogin(userAuth.getUsername())
+        .setUserName(userAuth.getUsername())
         .setPassword(userAuth.getPassword())
-        .submit();
+        .clickSignIn();
 
     new MainPage()
-        .checkThatStatisticDisplayed();
+        .loadPage();
 
 
     $(".main-content__section-stats").should(visible);

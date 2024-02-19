@@ -9,7 +9,7 @@ import static com.codeborne.selenide.Condition.text;
 import static com.codeborne.selenide.Selectors.byText;
 import static com.codeborne.selenide.Selenide.$;
 
-public class MainPage {
+public class MainPage extends BasePage<MainPage> {
 
     private static final String HEADER_TEXT = "Niffler. The coin keeper.";
 
@@ -19,6 +19,7 @@ public class MainPage {
             deleteSelectedButton = $(byText("Delete selected")),
             friendsButton = $("a[href='/friends']"),
             allPeopleButton = $("a[href='/people']");
+
     private final ElementsCollection
             spendRows = table.$$("tbody tr");
 
