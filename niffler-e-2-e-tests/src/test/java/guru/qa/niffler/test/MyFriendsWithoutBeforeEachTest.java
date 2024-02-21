@@ -11,13 +11,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import static guru.qa.niffler.jupiter.annotation.User.UserType.*;
 
 @ExtendWith(UsersQueueExtension.class)
-public class MyFriendsWithoutBeforeEachTest {
-
-    private final WelcomePage welcomePage = new WelcomePage();
-    private final LoginPage loginPage = new LoginPage();
-    private final MainPage mainPage = new MainPage();
-    private final FriendsPage friendsPage = new FriendsPage();
-    private final PeoplePage peoplePage = new PeoplePage();
+public class MyFriendsWithoutBeforeEachTest extends BaseWebTest {
 
     @BeforeEach
     void doLogin() {
