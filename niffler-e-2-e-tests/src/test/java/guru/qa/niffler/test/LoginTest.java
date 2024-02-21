@@ -24,60 +24,63 @@ import static com.codeborne.selenide.Selenide.$;
 @ExtendWith(UserRepositoryExtension.class)
 public class LoginTest extends BaseWebTest {
 
-  private UserRepository userRepository;
+    private final MainPage mainPage = new MainPage();
+    private final LoginPage loginPage = new LoginPage();
 
-  private UserAuthEntity userAuth;
-  private UserEntity user;
+    private UserRepository userRepository;
 
-
-  @BeforeEach
-  void createUser() {
-    userAuth = new UserAuthEntity();
-    userAuth.setUsername("valentin_7");
-    userAuth.setPassword("12345");
-    userAuth.setEnabled(true);
-    userAuth.setAccountNonExpired(true);
-    userAuth.setAccountNonLocked(true);
-    userAuth.setCredentialsNonExpired(true);
-
-    AuthorityEntity[] authorities = Arrays.stream(Authority.values()).map(
-        a -> {
-          AuthorityEntity ae = new AuthorityEntity();
-          ae.setAuthority(a);
-          return ae;
-        }
-    ).toArray(AuthorityEntity[]::new);
-
-    userAuth.addAuthorities(authorities);
-
-    user = new UserEntity();
-    user.setUsername("valentin_7");
-    user.setCurrency(CurrencyValues.RUB);
-    userRepository.createInAuth(userAuth);
-    userRepository.createInUserdata(user);
-  }
-
-  @AfterEach
-  void removeUser() {
-    userRepository.deleteInAuthById(userAuth.getId());
-    userRepository.deleteInUserdataById(user.getId());
-  }
-
-  @DbUser()
-  @Test
-  void statisticShouldBeVisibleAfterLogin() {
-    Selenide.open("http://127.0.0.1:3000/main");
-    $("a[href*='redirect']").click();
-
-    new LoginPage()
-        .setUserName(userAuth.getUsername())
-        .setPassword(userAuth.getPassword())
-        .clickSignIn();
-
-    new MainPage()
-        .loadPage();
+    private UserAuthEntity userAuth;
+    private UserEntity user;
 
 
-    $(".main-content__section-stats").should(visible);
-  }
+    @BeforeEach
+    void createUser() {
+        userAuth = new UserAuthEntity();
+        userAuth.setUsername("valentin_7");
+        userAuth.setPassword("12345");
+        userAuth.setEnabled(true);
+        userAuth.setAccountNonExpired(true);
+        userAuth.setAccountNonLocked(true);
+        userAuth.setCredentialsNonExpired(true);
+
+        AuthorityEntity[] authorities = Arrays.stream(Authority.values()).map(
+                a -> {
+                    AuthorityEntity ae = new AuthorityEntity();
+                    ae.setAuthority(a);
+                    return ae;
+                }
+        ).toArray(AuthorityEntity[]::new);
+
+        userAuth.addAuthorities(authorities);
+
+        user = new UserEntity();
+        user.setUsername("valentin_7");
+        user.setCurrency(CurrencyValues.RUB);
+        userRepository.createInAuth(userAuth);
+        userRepository.createInUserdata(user);
+    }
+
+    @AfterEach
+    void removeUser() {
+        userRepository.deleteInAuthById(userAuth.getId());
+        userRepository.deleteInUserdataById(user.getId());
+    }
+
+    @DbUser()
+    @Test
+    void statisticShouldBeVisibleAfterLogin() {
+        Selenide.open("http://127.0.0.1:3000/main");
+        $("a[href*='redirect']").click();
+
+        loginPage
+                .setUserName(userAuth.getUsername())
+                .setPassword(userAuth.getPassword())
+                .clickSignIn();
+
+        mainPage
+                .loadPage();
+
+
+        $(".main-content__section-stats").should(visible);
+    }
 }
