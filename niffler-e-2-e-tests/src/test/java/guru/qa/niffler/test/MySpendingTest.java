@@ -10,14 +10,10 @@ import guru.qa.niffler.page.MainPage;
 import guru.qa.niffler.page.WelcomePage;
 import org.junit.jupiter.api.Test;
 
-public class MySpendingTest {
+public class MySpendingTest extends BaseWebTest {
     static {
         Configuration.browserSize = "1980x1024";
     }
-
-    private final WelcomePage welcomePage = new WelcomePage();
-    private final LoginPage loginPage = new LoginPage();
-    private final MainPage mainPage = new MainPage();
 
     @GenerateCategory(
             username = "duck",

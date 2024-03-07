@@ -1,0 +1,18 @@
+package guru.qa.niffler.api.currency;
+
+import guru.qa.niffler.model.CurrencyCalculateJson;
+import guru.qa.niffler.model.CurrencyJson;
+import retrofit2.http.Body;
+import retrofit2.http.GET;
+import retrofit2.http.POST;
+import retrofit2.Call;
+
+import java.util.List;
+
+public interface CurrencyApi {
+    @GET("/getAllCurrencies")
+    Call<List<CurrencyJson>> getAllCurrencies();
+
+    @POST("/calculate")
+    Call<CurrencyCalculateJson> getAllCurrencies(@Body CurrencyCalculateJson currencyCalculate);
+}

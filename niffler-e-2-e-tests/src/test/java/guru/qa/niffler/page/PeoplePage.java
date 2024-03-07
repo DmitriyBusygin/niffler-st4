@@ -8,7 +8,7 @@ import io.qameta.allure.Step;
 import static com.codeborne.selenide.Condition.text;
 import static com.codeborne.selenide.Selenide.$;
 
-public class PeoplePage {
+public class PeoplePage extends BasePage<PeoplePage> {
 
     private final SelenideElement
             table = $(".table");

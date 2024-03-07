@@ -10,7 +10,7 @@ import static com.codeborne.selenide.Condition.text;
 import static com.codeborne.selenide.Condition.visible;
 import static com.codeborne.selenide.Selenide.$;
 
-public class FriendsPage {
+public class FriendsPage extends BasePage<FriendsPage> {
 
     private final SelenideElement
             table = $(".table");
@@ -18,14 +18,14 @@ public class FriendsPage {
     private final ElementsCollection
             friendsRows = table.$$("tbody tr");
 
-    @Step("В таблице есть друг с именем {name}")
+    @Step("В таблице есть друг с именем: {name}")
     public FriendsPage checkFriendWithNameInTable(UserJson user) {
         friendsRows.find(text(user.testData().friendsName()))
                 .shouldBe(visible);
         return this;
     }
 
-    @Step("В таблице есть приглашение дружить от пользователя {user}")
+    @Step("В таблице есть приглашение дружить от пользователя: {user}")
     public FriendsPage invitationToBeFriendsFromUser(UserJson user) {
         friendsRows.find(text(user.testData().friendsName()))
                 .$("div[data-tooltip-id='submit-invitation']")
@@ -33,7 +33,7 @@ public class FriendsPage {
         return this;
     }
 
-    @Step("В таблице друзей количество строк равно {count}")
+    @Step("В таблице друзей количество строк равно: {count}")
     public FriendsPage checkCountRowsInTable(int count) {
         friendsRows.should(CollectionCondition.size(count));
         return this;

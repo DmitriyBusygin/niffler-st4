@@ -9,10 +9,6 @@ import org.junit.jupiter.api.Test;
 
 public class MyLoginTest extends BaseWebTest {
 
-    private final WelcomePage welcomePage = new WelcomePage();
-    private final LoginPage loginPage = new LoginPage();
-    private final MainPage mainPage = new MainPage();
-
     @DbUser(username = "lala", password = "12345")
     @Test
     void statisticShouldBeVisibleAfterLogin(UserAuthEntity userAuth) {

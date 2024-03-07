@@ -7,7 +7,7 @@ import static com.codeborne.selenide.Condition.text;
 import static com.codeborne.selenide.Selenide.$;
 import static com.codeborne.selenide.Selenide.open;
 
-public class WelcomePage {
+public class WelcomePage extends BasePage<WelcomePage> {
     private static final String URL = "http://127.0.0.1:3000/main";
     private static final String HEADER_TEXT = "Welcome to magic journey with Niffler. The coin keeper";
 
@@ -28,3 +28,4 @@ public class WelcomePage {
         return new LoginPage();
     }
 }
+
